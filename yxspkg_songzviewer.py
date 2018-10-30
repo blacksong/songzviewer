@@ -1,6 +1,6 @@
 from PyQt5.QtCore import  QTimer,Qt,QSize,QPoint,QEvent
 from PyQt5.QtGui import QImage, QPixmap,QPainter,QFont,QColor,QPen,QCursor,QKeySequence
-from PyQt5.QtWidgets import (QApplication,  QLabel,QWidget,QMessageBox,QDesktopWidget)
+from PyQt5.QtWidgets import (QApplication,  QLabel,QWidget,QMessageBox,QDesktopWidget,QMenu,QAction)
 from numpy import stack
 import imageio
 import sys
@@ -8,7 +8,7 @@ from os import path
 import os
 import time
 imread=imageio.imread
-__version__='1.0.0'
+__version__='1.0.1'
 __author__='Blacksong'
 
 class datarc(dict):
@@ -284,6 +284,9 @@ class GifPreview(QWidget):   #预览gif
             self.offset = 0
             self.setWindowFlags(Qt.FramelessWindowHint)#FramelessWindowHint
         print(default_value)
+
+        self.create_right_key_menu()
+
         self.isMaximized_value=False
         self.timer=None
         self.autoplay=False
@@ -299,6 +302,8 @@ class GifPreview(QWidget):   #预览gif
         self.minimumSize_window=200,100
         self.title_height=26
         self.bottom_height=0
+
+        
         
         self.first_window=True
         self.CloseButton=YDesignButton(self)
@@ -348,6 +353,26 @@ class GifPreview(QWidget):   #预览gif
             self.dir_images=None
             self.resize(400,400)
             self.show()
+        
+
+    def create_right_key_menu(self):
+        self.setContextMenuPolicy(Qt.CustomContextMenu)  
+        self.customContextMenuRequested.connect(self.show_right_menu)  
+  
+        self.rightMenu = QMenu(self)  
+        
+        self.editAct = QAction("Edit with songzgif", self,  triggered=self.edit_with_songzgif)
+        self.rightMenu.addAction(self.editAct) 
+        # self.rightMenu.addSeparator() 
+    def edit_with_songzgif(self):
+        from yxspkg.songzgif import gif
+        self.gifMaker = gif.GifMaker(self.image_name)
+    def show_right_menu(self, pos): # 重载弹出式菜单事件
+
+        pos = QCursor.pos()
+        pos.setX(pos.x()+2)
+        pos.setY(pos.y()+2)
+        self.rightMenu.exec_(pos)  
     def isMaximized(self):
         if sys.platform.startswith('darwin'):
             return self.isMaximized_value
@@ -397,6 +422,7 @@ class GifPreview(QWidget):   #预览gif
                 self.dir_images_n = len(self.dir_images)-1
             self.open_file(self.dir_images[self.dir_images_n])
     def open_file(self,name):
+        self.image_name = name
         if name is not None:
             self.setWindowTitle(name.split(os.sep)[-1])
             try:
@@ -611,18 +637,18 @@ class GifPreview(QWidget):   #预览gif
         self.setPosition()
     def keyPressEvent(self,e):
         if e.matches(QKeySequence.MoveToPreviousLine):
-            self.scaleImage(1.05)
+            self.scaleImage(1/0.7)
         elif e.matches(QKeySequence.MoveToNextLine):
-            self.scaleImage(0.95)
+            self.scaleImage(0.7)
         elif e.matches(QKeySequence.MoveToPreviousChar):
             self.previous_image(True)
         elif e.matches(QKeySequence.MoveToNextChar):
             self.next_image(True)
     def wheelEvent(self,e):
         if e.angleDelta().y()>0:
-            factor=1.05
+            factor=1/0.7
         else:
-            factor=0.95
+            factor=0.7
         self.scaleImage(factor)
     def displayRGB(self,pos):
         if not self.label.is_focus:
